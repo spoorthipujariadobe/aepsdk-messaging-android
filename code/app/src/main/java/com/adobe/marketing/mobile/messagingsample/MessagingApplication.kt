@@ -24,7 +24,7 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-        MobileCore.configureWithAppID("")
+        MobileCore.configureWithAppID("3149c49c3910/aade5cbb52e4/launch-365a8d4bb1e7-development")
 
         val extensions = listOf(
             Edge.EXTENSION,
