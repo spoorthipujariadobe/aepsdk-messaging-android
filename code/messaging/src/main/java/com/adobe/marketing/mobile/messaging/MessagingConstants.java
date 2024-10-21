@@ -407,4 +407,73 @@ public final class MessagingConstants {
             private PayloadKeys() {}
         }
     }
+
+    public static class ContentCard {
+
+        public static class SmallImageTemplate {
+            public static final String TITLE = "title";
+            public static final String BODY = "body";
+            public static final String IMAGE = "image";
+            public static final String ACTION_URL = "actionUrl";
+            public static final String BUTTONS = "buttons";
+            public static final String DISMISS_BUTTON = "dismissBtn";
+
+            public static class Meta {
+                public static final String ADOBE_DATA = "adobe";
+                public static final String TEMPLATE = "template";
+            }
+        }
+
+        public static class UIElement {
+            public static class Text {
+                public static final String CONTENT = "content";
+                public static final String CLR = "clr";
+                public static final String ALIGN = "align";
+                public static final String FONT = "font";
+            }
+
+            public static class Button {
+                public static final String INTERACTION_ID = "interactId";
+                public static final String TEXT = "text";
+                public static final String ACTION_URL = "actionUrl";
+                public static final String BACKGROUND_COLOR = "bgClr";
+                public static final String BACKGROUND_IMAGE = "bgImg";
+                public static final String BORDER_WIDTH = "borWidth";
+                public static final String BORDER_COLOR = "borColor";
+            }
+
+            public static class Image {
+                public static final String URL = "url";
+                public static final String DARK_URL = "darkUrl";
+                public static final String BUNDLE = "bundle";
+                public static final String DARK_BUNDLE = "darkBundle";
+                public static final String ICON = "icon";
+                public static final String ICON_SIZE = "iconSize";
+                public static final String ICON_COLOR = "iconColor";
+                public static final String ALTERNATE_TEXT = "imgSize";
+                public static final String PLACEHOLDER = "width";
+            }
+
+            public static class DismissButton {
+                public static final String STYLE = "style";
+
+                public static class Icon {
+                    public static final String SIMPLE = "xmark";
+                    public static final String CIRCLE = "xmark.circle.fill";
+                }
+            }
+
+            public static class Font {
+                public static final String NAME = "name";
+                public static final String SIZE = "size";
+                public static final String WEIGHT = "weight";
+                public static final String STYLE = "style";
+            }
+
+            public static class Color {
+                public static final String LIGHT = "light";
+                public static final String DARK = "dark";
+            }
+        }
+    }
 }
