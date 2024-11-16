@@ -40,7 +40,7 @@ jobs:
         
     - name: Verify screenshots
       id: verify-test
-      run: make verify-snapshots
+      run: ./code/gradlew -p code/messaging testPhoneDebugUnitTest -Proborazzi.test.compare=true
 
     - name: Upload screenshots difference to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
