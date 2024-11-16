@@ -33,21 +33,20 @@ jobs:
       uses: dawidd6/action-download-artifact@v2
       with:
         name: screenshots
-        path: app/build/outputs/roborazzi
+        path: code/messaging/build/outputs/roborazzi
         workflow: test.yaml
         branch: main
         
     - name: Verify screenshots
       id: verify-test
-      run: |
-        ./gradlew app:verifyRoborazziDebug --stacktrace
+      run: make verify-snapshot
 
     - name: Upload screenshots difference to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
       if: ${{ always() }}
       with:
         name: screenshot-diff
-        path: app/build/outputs/roborazzi
+        path: code/messaging/build/outputs/roborazzi
         retention-days: 30
         
     - name: Upload screenshots difference report to GitHub Actions Artifacts
@@ -55,13 +54,13 @@ jobs:
       if: ${{ always() }}
       with:
         name: screenshot-diff-reports
-        path: app/build/reports
+        path: code/messaging/build/reports/roborazzi
         retention-days: 30
         
-    - name: Upload screenshots test report to GitHub Actions Artifacts
+    - name: Upload screenshots test results to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
       if: ${{ always() }}
       with:
         name: screenshot-diff-test-results
-        path: app/build/test-results
+        path: code/messaging/build/test-results/roborazzi
         retention-days: 30
