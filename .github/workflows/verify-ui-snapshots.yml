@@ -11,7 +11,13 @@
 #
 
 name: Verify UI testing screenshots
-on: [push, pull_request]
+on:
+  pull_request:
+    types:
+      - opened        # When a pull request is created
+      - synchronize   # When commits are pushed to an open pull request
+      - reopened      # When a closed pull request is reopened
+
 jobs:
   verify-screenshots:
     runs-on: ubuntu-latest
@@ -27,13 +33,13 @@ jobs:
         java-version: 17
     
     - name: Gradle cache
-      uses: gradle/gradle-build-action@v2
+      uses: gradle/gradle-build-action@v3
 
     - name: Download screenshots from main branch
-      uses: dawidd6/action-download-artifact@v2
+      uses:  dawidd6/action-download-artifact@v3
       with:
         name: screenshots
-        workflow: update-ui-snapshots.yaml
+        workflow: update-ui-snapshots.yml
         branch: main
         
     - name: Verify screenshots
