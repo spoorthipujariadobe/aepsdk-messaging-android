@@ -33,7 +33,6 @@ jobs:
       uses: dawidd6/action-download-artifact@v2
       with:
         name: screenshots
-        path: code/messaging/build/outputs/roborazzi
         workflow: update-ui-snapshots.yaml
         branch: main
         
