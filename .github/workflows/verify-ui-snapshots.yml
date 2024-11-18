@@ -40,7 +40,7 @@ jobs:
         
     - name: Verify screenshots
       id: verify-test
-      run: ./code/gradlew -p code/messaging testPhoneDebugUnitTest -Proborazzi.test.verify=true
+      run: ./code/gradlew -p code/messaging testPhoneDebugUnitTest -Proborazzi.test.compare=true
 
     - name: Upload screenshots difference to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
@@ -65,3 +65,14 @@ jobs:
         name: screenshot-diff-test-results
         path: code/messaging/build/test-results/roborazzi
         retention-days: 30
+        
+    - name: Save PR number
+      if: ${{ github.event_name == 'pull_request' }}
+      run: |
+        mkdir -p ./pr
+        echo ${{ github.event.number }} > ./pr/NR
+    - uses: actions/upload-artifact@v4
+      with:
+        name: pr
+        path: pr/
+        
