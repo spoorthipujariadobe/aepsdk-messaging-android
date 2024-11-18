@@ -43,12 +43,21 @@ jobs:
       id: verify-test
       run: make verify-screenshots
 
+    - name: Check if comparison screenshots exist
+      run: |
+        if ls code/messaging/build/outputs/roborazzi/*_compare.png 1> /dev/null 2>&1; then
+          echo "Failed comparison screenshots found."
+        else
+          echo "All tests passed"
+          exit 1
+        fi
+
     - name: Upload screenshots difference to GitHub Actions Artifacts
-      uses: actions/upload-artifact@v3
       if: ${{ always() }}
+      uses: actions/upload-artifact@v3
       with:
         name: screenshot-diff
-        path: code/messaging/build/outputs/roborazzi
+        path: code/messaging/build/outputs/roborazzi/*_compare.png
         retention-days: 30
         
     - name: Upload screenshots difference report to GitHub Actions Artifacts
