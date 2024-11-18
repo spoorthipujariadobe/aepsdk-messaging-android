@@ -77,5 +77,3 @@ record-snapshots:
 # verify snapshots with baseline for UI tests
 verify-snapshots:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.compare=true)
-
-#just to test github actions
