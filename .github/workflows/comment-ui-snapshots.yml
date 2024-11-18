@@ -3,7 +3,7 @@ name: Comment UI testing screenshot comparison
 on:
   workflow_run:
     workflows:
-      - verify-ui-snapshots
+      - verify-ui-snapshots.yml
     types:
       - completed
 
