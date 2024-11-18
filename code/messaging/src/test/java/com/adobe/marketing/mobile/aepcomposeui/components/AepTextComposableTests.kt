@@ -65,7 +65,7 @@ class AepTextComposableTests(
     private val mockAepTextStyle = AepTextStyle(
         modifier = Modifier.size(150.dp),
         textStyle = TextStyle(
-            color = Color.Red,
+            color = Color.Green,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
