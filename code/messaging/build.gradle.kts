@@ -67,6 +67,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:${BuildConstants.Versions.COMPOSE}")
     implementation("androidx.compose.material3:material3:$material3Version")
     compileOnly("com.google.firebase:firebase-messaging:23.4.1")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // testImplementation dependencies provided by aep-library:
     // MOCKITO_CORE, MOCKITO_INLINE, JSON

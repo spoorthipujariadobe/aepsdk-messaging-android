@@ -1,0 +1,85 @@
+{
+  "type": "view",
+  "style": {
+    "flexDirection": "column",
+    "padding": 16,
+    "borderWidth": 2,
+    "borderColor": "#FF0000",
+    "borderRadius": 8
+  },
+  "children": [
+    {
+      "type": "image",
+      "style": {
+        "fillWidth": false,
+        "aspectRatio": "1/1",
+        "borderRadius": 8,
+        "contentScale": "crop"
+      },
+      "url": "https://analyticsindiamag.com/wp-content/uploads/2023/03/adobe.jpeg"
+    },
+    {
+      "type": "view",
+      "style": {
+        "flexDirection": "row",
+        "marginLeft": 12,
+        "marginRight": 12,
+        "marginTop": 12,
+        "marginBottom": 12
+      },
+      "children": [
+        {
+          "type": "view",
+          "style": {
+            "flexDirection": "column",
+            "flex": 1
+          },
+          "children": [
+            {
+              "type": "text",
+              "style": {
+                "fontSize": 18,
+                "fontWeight": "400",
+                "marginBottom": 12,
+                "borderRadius": 8
+              },
+              "content": "Title 1"
+            },
+            {
+              "type": "text",
+              "style": {
+                "fontSize": 16
+              },
+              "content": "Subtitle 1"
+            }
+          ]
+        },
+        {
+          "type": "view",
+          "style": {
+            "flexDirection": "column",
+            "flex": 1
+          },
+          "children": [
+            {
+              "type": "text",
+              "style": {
+                "fontSize": 18,
+                "fontWeight": "400",
+                "borderRadius": 8
+              },
+              "content": "Title 2"
+            },
+            {
+              "type": "text",
+              "style": {
+                "fontSize": 16
+              },
+              "content": "Subtitle 2"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

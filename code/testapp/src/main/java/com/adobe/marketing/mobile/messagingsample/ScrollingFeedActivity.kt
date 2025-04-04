@@ -13,20 +13,25 @@ package com.adobe.marketing.mobile.messagingsample
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -35,27 +40,23 @@ import androidx.lifecycle.viewModelScope
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.components.DynamicUIFromJson
 import com.adobe.marketing.mobile.aepcomposeui.components.SmallImageCard
-import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
-import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
-import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
-import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
-import com.adobe.marketing.mobile.messaging.ContentCardMapper
 import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
 import com.adobe.marketing.mobile.messaging.ContentCardUIProvider
+import com.adobe.marketing.mobile.messaging.SchemaType
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class ScrollingFeedActivity : AppCompatActivity() {
     private lateinit var binding: ActivityScrollingBinding
-    private lateinit var contentCardUIProvider: ContentCardUIProvider
     private lateinit var contentCardViewModel: AepContentCardViewModel
-    private lateinit var contentCardCallback: ContentCardCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,187 +64,155 @@ class ScrollingFeedActivity : AppCompatActivity() {
         binding = ActivityScrollingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // staging environment - CJM Stage, AJO Web (VA7)
-        // surface for content card -
-        // mobileapp://com.adobe.marketing.mobile.messagingsample/card/ms
-        val surfaces = mutableListOf<Surface>()
-        val surface = Surface("card/ms")
-        surfaces.add(surface)
+        // Initialize ViewModel
+        contentCardViewModel = ViewModelProvider(this)[AepContentCardViewModel::class.java]
 
-        // Initialize the ContentCardUIProvider
-        contentCardUIProvider = ContentCardUIProvider(surface)
-
-        // Initialize the ViewModel
-        contentCardViewModel =
-            ViewModelProvider(this, AepContentCardViewModelFactory(contentCardUIProvider)).get(
-                AepContentCardViewModel::class.java
-            )
-
-        contentCardCallback = ContentCardCallback()
-
-        // Set a click listener for refresh button which calls the API for fetch content cards from Edge
-        val refreshButton: ImageButton = findViewById(R.id.refreshButton)
-        refreshButton.setOnClickListener {
-            Messaging.updatePropositionsForSurfaces(surfaces)
-            contentCardViewModel.refreshContent()
-        }
+        // Read JSON templates
+        val smallImageTemplate = resources.openRawResource(R.raw.small_image_template)
+            .bufferedReader().use { it.readText() }
+        val largeImageTemplate = resources.openRawResource(R.raw.large_image_template)
+            .bufferedReader().use { it.readText() }
+        val imageOnlyTemplate = resources.openRawResource(R.raw.image_only_template)
+            .bufferedReader().use { it.readText() }
 
         binding.composeView.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 AppTheme {
-                    AepContentCardList(contentCardViewModel)
-                }
-            }
-        }
-    }
-
-
-    @Composable
-    private fun AepContentCardList(viewModel: AepContentCardViewModel) {
-        // Collect the state from ViewModel
-        val aepUiList by viewModel.aepUIList.collectAsStateWithLifecycle()
-
-        // Get the ContentCardSchemaData for the AepUI list if needed
-        val contentCardSchemaDataList = aepUiList.map {
-            when (it) {
-                is SmallImageUI ->
-                    ContentCardMapper.Companion.instance.getContentCardSchemaData(it.getTemplate().id)
-
-                else -> null
-            }
-        }
-
-        // Reorder the AepUI list based on the ContentCardSchemaData fields if needed
-        val reorderedAepUIList = aepUiList.sortedWith(compareByDescending {
-            val rank =
-                contentCardSchemaDataList[aepUiList.indexOf(it)]?.meta?.get("priority") as String?
-                    ?: "0"
-            rank.toInt()
-        })
-
-/*        // Displaying content cards in a Column
-        // create a custom style for the small image card in column
-        val smallImageCardStyleColumn = SmallImageUIStyle.Builder()
-            .rootRowStyle(
-                AepRowStyle(
-                    modifier = Modifier.fillMaxWidth()
-                )
-            )
-            .titleAepTextStyle(AepTextStyle(textStyle = TextStyle(Color.Green)))
-            .build()
-
-        // Create column with composables from AepUI instances
-        LazyColumn {
-            items(reorderedAepUIList) { aepUI ->
-                when (aepUI) {
-                    is SmallImageUI -> {
-                        val state = aepUI.getState()
-                        if (!state.dismissed) {
-                            SmallImageCard(
-                                ui = aepUI,
-                                style = smallImageCardStyleColumn,
-                                observer = ContentCardEventObserver(null)
-                            )
-                        }
-                    }
-                }
-            }
-        }*/
-
-        // Displaying content cards in a Row
-        // create a custom style for the small image card in row
-        val smallImageCardStyleRow = SmallImageUIStyle.Builder()
-            .cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp).padding(8.dp)))
-            .rootRowStyle(
-                AepRowStyle(
-                    modifier = Modifier.fillMaxSize().padding(8.dp)
-                )
-            )
-            .titleAepTextStyle(AepTextStyle(textStyle = TextStyle(Color.Green)))
-            .build()
-
-        // Create row with composables from AepUI instances
-        LazyRow {
-            items(reorderedAepUIList) { aepUI ->
-                when (aepUI) {
-                    is SmallImageUI -> {
-                        val state = aepUI.getState()
-                        if (!state.dismissed) {
-                            SmallImageCard(
-                                ui = aepUI,
-                                style = smallImageCardStyleRow,
-                                observer = ContentCardEventObserver(contentCardCallback)
-                            )
-                        }
-                    }
+                    TabScreen(
+                        smallImageTemplate = smallImageTemplate,
+                        largeImageTemplate = largeImageTemplate,
+                        imageOnlyTemplate = imageOnlyTemplate,
+                        viewModel = contentCardViewModel
+                    )
                 }
             }
         }
     }
 }
 
-class ContentCardCallback: ContentCardUIEventListener {
-    override fun onDisplay(aepUI: AepUI<*, *>) {
-        Log.d("ContentCardCallback", "onDisplay")
+@Composable
+private fun TabScreen(
+    smallImageTemplate: String,
+    largeImageTemplate: String,
+    imageOnlyTemplate: String,
+    viewModel: AepContentCardViewModel
+) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("Small Image", "Large Image", "Image Only", "Server Content")
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        TabRow(selectedTabIndex = selectedTabIndex) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = { Text(text = title) }
+                )
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> TemplateContent(jsonString = smallImageTemplate)
+            1 -> TemplateContent(jsonString = largeImageTemplate)
+            2 -> TemplateContent(jsonString = imageOnlyTemplate)
+            3 -> ServerContent(viewModel = viewModel)
+        }
+    }
+}
+
+@Composable
+private fun TemplateContent(jsonString: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        DynamicUIFromJson(jsonString = jsonString)
+    }
+}
+
+@Composable
+private fun ServerContent(viewModel: AepContentCardViewModel) {
+    val aepUiList by viewModel.aepUIList.collectAsStateWithLifecycle()
+
+    Messaging.updatePropositionsForSurfaces(mutableListOf(Surface("card/ms"))) {
+        viewModel.refreshContent()
     }
 
-    override fun onDismiss(aepUI: AepUI<*, *>) {
-        Log.d("ContentCardCallback", "onDismiss")
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        items(aepUiList.size) { index ->
+            DynamicUIFromJson(
+                jsonString = aepUiList[index].getJSONObject("content").toString()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
     }
 
-    override fun onInteract(
-        aepUI: AepUI<*, *>,
-        interactionId: String?,
-        actionUrl: String?
-    ): Boolean {
-        Log.d("ContentCardCallback", "onInteract $interactionId $actionUrl")
-        // If the url is handled here, return true
-        return false
+    // Refresh button
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopEnd
+    ) {
+        IconButton(
+            onClick = {
+                val surfaces = mutableListOf(Surface("card/ms"))
+                Messaging.updatePropositionsForSurfaces(surfaces)
+                viewModel.refreshContent()
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Refresh"
+            )
+        }
     }
 }
 
 // create new view model or reuse existing one to hold the aepUIList
-class AepContentCardViewModel(private val contentCardUIProvider: ContentCardUIProvider) : ViewModel() {
+class AepContentCardViewModel : ViewModel() {
     // State to hold AepUI list
-    private val _aepUIList = MutableStateFlow<List<AepUI<*, *>>>(emptyList())
-    val aepUIList: StateFlow<List<AepUI<*, *>>> = _aepUIList.asStateFlow()
+    private val _aepUIList = MutableStateFlow<List<JSONObject>>(emptyList())
+    val aepUIList: StateFlow<List<JSONObject>> = _aepUIList.asStateFlow()
 
     init {
         // Launch a coroutine to fetch the aepUIList from the ContentCardUIProvider
         // when the ViewModel is created
         viewModelScope.launch {
-            contentCardUIProvider.getContentCardUI().collect { aepUiResult ->
-                aepUiResult.onSuccess { aepUi ->
-                    _aepUIList.value = aepUi
-                }
-                aepUiResult.onFailure { throwable ->
-                    Log.d("ContentCardUIProvider", "Error fetching AepUI list: ${throwable}")
-                }
-            }
+            getCBECards()
         }
     }
 
     // Function to refresh the aepUIList from the ContentCardUIProvider
     fun refreshContent() {
         viewModelScope.launch {
-            contentCardUIProvider.refreshContent()
+            getCBECards()
         }
     }
-}
 
-class AepContentCardViewModelFactory(
-    private val contentCardUIProvider: ContentCardUIProvider
-) : ViewModelProvider.Factory {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return when {
-            modelClass.isAssignableFrom(AepContentCardViewModel::class.java) -> {
-                AepContentCardViewModel(contentCardUIProvider) as T
+    private fun getCBECards() {
+        val surfaces = mutableListOf<Surface>()
+        val surface = Surface("card/ms")
+        surfaces.add(surface)
+        val cbeCardJsonList = mutableListOf<JSONObject>()
+        Messaging.getPropositionsForSurfaces(surfaces) { propositionsMap ->
+            if (propositionsMap.isNotEmpty()) {
+                val propositionList = propositionsMap[surface]
+                if (!propositionList.isNullOrEmpty()) {
+                    for(proposition in propositionList) {
+                        for(propositionItem in proposition.items) {
+                            if (propositionItem.schema == SchemaType.JSON_CONTENT){
+                                cbeCardJsonList.add(JSONObject(propositionItem.itemData))
+                            }
+                        }
+                    }
+                }
+                _aepUIList.value = cbeCardJsonList
             }
-
-            else -> throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

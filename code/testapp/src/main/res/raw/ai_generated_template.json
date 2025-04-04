@@ -1,0 +1,74 @@
+{
+  "type": "view",
+  "style": {
+    "flexDirection": "row",
+    "padding": 16,
+    "backgroundColor": "white",
+    "borderRadius": 8,
+    "alignItems": "center"
+  },
+  "children": [
+    {
+      "type": "view",
+      "style": {
+        "width": 90,
+        "height": 90,
+        "backgroundColor": "#F4884A",
+        "borderRadius": 8,
+        "justifyContent": "center",
+        "alignItems": "center",
+        "marginRight": 16
+      },
+      "children": [
+        {
+          "type": "text",
+          "style": {
+            "fontSize": 40,
+            "color": "#FFF1E0"
+          },
+          "content": "🍀"
+        }
+      ]
+    },
+    {
+      "type": "view",
+      "style": {
+        "flexDirection": "column"
+      },
+      "children": [
+        {
+          "type": "text",
+          "style": {
+            "fontSize": 24,
+            "fontWeight": "bold",
+            "color": "black",
+            "marginBottom": 12
+          },
+          "content": "You just our\nvalued customer"
+        },
+        {
+          "type": "view",
+          "style": {
+            "borderWidth": 1,
+            "borderColor": "#F4884A",
+            "borderRadius": 20,
+            "paddingVertical": 8,
+            "paddingHorizontal": 20,
+            "alignSelf": "flex-start"
+          },
+          "children": [
+            {
+              "type": "text",
+              "style": {
+                "color": "#F4884A",
+                "fontSize": 18,
+                "fontWeight": "500"
+              },
+              "content": "See Details"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

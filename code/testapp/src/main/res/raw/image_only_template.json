@@ -1,0 +1,35 @@
+
+{
+  "type": "view",
+  "style": {
+    "flexDirection": "box",
+    "alignItems": "center",
+    "padding": 16,
+    "borderWidth": 2,
+    "borderColor": "#FF0000",
+    "borderRadius": 8
+  },
+  "children": [
+    {
+      "type": "image",
+      "style": {
+        "fillWidth": true,
+        "borderRadius": 8,
+        "contentScale": "crop"
+      },
+      "url": "https://analyticsindiamag.com/wp-content/uploads/2023/03/adobe.jpeg"
+    },
+    {
+      "type": "text",
+      "style": {
+        "fontSize": 24,
+        "fontWeight": "bold",
+        "color": "#FFFFFF",
+        "padding": 8,
+        "borderRadius": 4,
+        "justifyContent": "bottom"
+      },
+      "content": "This is an image only template"
+    }
+  ]
+}
