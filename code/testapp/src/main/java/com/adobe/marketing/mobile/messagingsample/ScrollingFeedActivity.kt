@@ -67,6 +67,11 @@ class ScrollingFeedActivity : AppCompatActivity() {
         // Initialize ViewModel
         contentCardViewModel = ViewModelProvider(this)[AepContentCardViewModel::class.java]
 
+        Messaging.updatePropositionsForSurfaces(mutableListOf(Surface("card/ms"))) { result ->
+            if(result) {
+                    contentCardViewModel.refreshContent()
+                }
+            }
         // Read JSON templates
         val smallImageTemplate = resources.openRawResource(R.raw.small_image_template)
             .bufferedReader().use { it.readText() }
@@ -136,39 +141,13 @@ private fun TemplateContent(jsonString: String) {
 private fun ServerContent(viewModel: AepContentCardViewModel) {
     val aepUiList by viewModel.aepUIList.collectAsStateWithLifecycle()
 
-    Messaging.updatePropositionsForSurfaces(mutableListOf(Surface("card/ms"))) {
-        viewModel.refreshContent()
-    }
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        items(aepUiList.size) { index ->
-            DynamicUIFromJson(
-                jsonString = aepUiList[index].getJSONObject("content").toString()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-
-    // Refresh button
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopEnd
-    ) {
-        IconButton(
-            onClick = {
-                val surfaces = mutableListOf(Surface("card/ms"))
-                Messaging.updatePropositionsForSurfaces(surfaces)
-                viewModel.refreshContent()
-            }
+    if (aepUiList.isNotEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Refresh,
-                contentDescription = "Refresh"
-            )
+            DynamicUIFromJson(jsonString = aepUiList[0].get("content").toString())
         }
     }
 }

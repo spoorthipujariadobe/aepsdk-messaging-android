@@ -53,6 +53,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepImageStyle
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -317,36 +318,37 @@ fun DynamicUIComponent(
 @Composable
 private fun createModifierFromStyle(style: StyleModel?): Modifier {
     if (style == null) return Modifier
-
+    
     return Modifier
         // Apply size constraints
         .then(
-            if(style.width != null) {
-                // Only width specified
+            if (style.width != null) {
                 Modifier.width(width = style.width.dp)
-            } else {
-                Modifier.wrapContentWidth()
-            })
-        .then(
-            if(style.height != null) {
-                // Only height specified
-                Modifier.height(height = style.height.dp)
-            } else {
-                Modifier.wrapContentHeight()
-            }
-        )
-        .then(
-            if(style.fillWidth == true) {
+            } else if (style.fillWidth == true) {
                 Modifier.fillMaxWidth()
+            } else {
+                // For row that don't have a specific width, use IntrinsicSize.Min
+                // This will make the row only as wide as its content requires
+                if (style.flexDirection?.lowercase() == "row") {
+                    Modifier.width(IntrinsicSize.Min)
                 } else {
-                Modifier
+                    Modifier.wrapContentWidth()
+                }
             }
         )
         .then(
-            if(style.fillHeight == true) {
+            if (style.height != null) {
+                Modifier.height(height = style.height.dp)
+            } else if (style.fillHeight == true) {
                 Modifier.fillMaxHeight()
             } else {
-                Modifier
+                // For columns that don't have a specific height, use IntrinsicSize.Min
+                // This will make the column only as tall as its content requires
+                if (style.flexDirection?.lowercase() == "column") {
+                    Modifier.height(IntrinsicSize.Min)
+                } else {
+                    Modifier.wrapContentHeight()
+                }
             }
         )
         // Apply background color
