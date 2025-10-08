@@ -462,6 +462,11 @@ public final class MessagingConstants {
             public static final String NONE = "none";
             public static final String SIMPLE = "simple";
             public static final String CIRCLE = "circle";
+
+            public static final String TOP_LEFT = "topleft";
+            public static final String TOP_RIGHT = "topright";
+            public static final String BOTTOM_LEFT = "bottomleft";
+            public static final String BOTTOM_RIGHT = "bottomright";
         }
     }
 }

@@ -9,16 +9,9 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui
+package com.adobe.marketing.mobile.aepcomposeui.style
 
-/**
- * Represents an action that can be performed on a UI component.
- */
-sealed class UIAction(val interaction: String) {
-    /**
-     * Represents a click action that can be performed on a UI component
-     * @property id unique identifier of the UI component
-     * @property actionUrl optional URL to be opened when the UI component is clicked
-     */
-    data class Click(val id: String, val actionUrl: String?) : UIAction("click")
-}
+class ContainerStyle(
+    val inboxContainerUIStyle: InboxContainerUIStyle = InboxContainerUIStyle.Builder().build(),
+    val carouselContainerUIStyle: CarouselContainerUIStyle = CarouselContainerUIStyle.Builder().build()
+)

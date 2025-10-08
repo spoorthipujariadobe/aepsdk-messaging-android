@@ -11,57 +11,89 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.adobe.marketing.mobile.aepcomposeui.AepContainerUI
+import com.adobe.marketing.mobile.aepcomposeui.CarouselContainerUI
+import com.adobe.marketing.mobile.aepcomposeui.InboxContainerUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepContainerUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
+import com.adobe.marketing.mobile.aepcomposeui.state.CarouselContainerUIState
+import com.adobe.marketing.mobile.aepcomposeui.state.InboxContainerUIState
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.CarouselContainerUITemplate
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxContainerUITemplate
+import com.adobe.marketing.mobile.messaging.ContentCardUIProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlin.jvm.java
 
-sealed interface AepContainerUiState {
-    object Loading : AepContainerUiState
-    data class Success(val containerUI: AepContainerUI<*, *>) : AepContainerUiState
-    data class Error(val error: Throwable) : AepContainerUiState
+sealed interface AepContainerState {
+    object Loading : AepContainerState
+    data class Success(val containerUI: AepContainerUI<*, *>) : AepContainerState
+    data class Error(val error: Throwable) : AepContainerState
 }
 
 class AepContainerRepository(
     private val aepUIProvider: AepUIContentProvider,
     private val aepContainerUIProvider: AepContainerUIContentProvider
-) {
-    private val _containerUiState = MutableStateFlow<AepContainerUiState>(AepContainerUiState.Loading)
-    val containerUiState: StateFlow<AepContainerUiState> = _containerUiState.asStateFlow()
+): ViewModel(){
+    private val _containerUiState = MutableStateFlow<AepContainerState>(AepContainerState.Loading)
+    val containerUiState: StateFlow<AepContainerState> = _containerUiState.asStateFlow()
 
-    suspend fun refreshContainer() {
-        _containerUiState.update { AepContainerUiState.Loading }
+    init {
+        viewModelScope.launch {
+            aepUIProvider.getContentCardFlow().collect { contentCardResult ->
+                aepContainerUIProvider.getContainerUI().collect { containerResult ->
+                    val state = when (containerResult) {
+                        is InboxContainerUITemplate -> {
+                            AepContainerState.Success(
+                                InboxContainerUI(
+                                    containerResult,
+                                    InboxContainerUIState(
+                                        aepUIList = contentCardResult
+                                    )
+                                )
+                            )
+                        }
 
-        aepUIProvider.getContent().collectLatest { contentResult ->
-            aepContainerUIProvider.getContainerUI().collectLatest { containerResult ->
-//                val state = containerResult.getOrNull()?.let { containerTemplate ->
-//                    when (containerTemplate) {
-//                        is InboxContainerUITemplate -> {
-//                            val uiList = if (contentResult.isSuccess) {
-//                                contentResult.getOrNull()?.mapNotNull { item ->
-//                                    UIUtils.getAepUI(item)
-//                                } ?: emptyList()
-//                            } else {
-//                                emptyList()
-//                            }
-//                            AepContainerUiState.Success(
-//                                InboxContainerUI(
-//                                    containerTemplate,
-//                                    InboxContainerUIState(
-//                                        aepUIList = uiList
-//                                    )
-//                                )
-//                            )
-//                        }
-//                    }
-//                } ?: AepContainerUiState.Error(containerResult.exceptionOrNull() ?: Exception("Failed to load container UI, empty container template"))
-//
-//                _containerUiState.update { state }
+                        is CarouselContainerUITemplate -> {
+                            AepContainerState.Success(
+                                CarouselContainerUI(
+                                    containerResult,
+                                    state = CarouselContainerUIState(
+                                        contentCardResult
+                                    )
+                                )
+                            )
+                        }
+                    }
+                    _containerUiState.update { state }
+                }
             }
+        }
+    }
+}
+
+
+class AepContainerViewModelFactory(
+    private val aepUIProvider: AepUIContentProvider,
+    private val aepContainerUIProvider: AepContainerUIContentProvider
+) : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return when {
+            modelClass.isAssignableFrom(AepContainerRepository::class.java) -> {
+                AepContainerRepository(aepUIProvider, aepContainerUIProvider ) as T
+            }
+
+            else -> throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

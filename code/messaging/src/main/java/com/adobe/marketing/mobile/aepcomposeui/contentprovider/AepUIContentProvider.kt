@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.contentprovider
 
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import kotlinx.coroutines.flow.Flow
 
@@ -30,4 +31,6 @@ interface AepUIContentProvider {
      * Implementations should update the data into the flow returned by [getContent].
      */
     suspend fun refreshContent()
+
+    suspend fun getContentCardFlow(): Flow<List<AepUI<*, *>>>
 }

@@ -9,16 +9,10 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui
+package com.adobe.marketing.mobile.aepcomposeui.state
 
-/**
- * Represents an action that can be performed on a UI component.
- */
-sealed class UIAction(val interaction: String) {
-    /**
-     * Represents a click action that can be performed on a UI component
-     * @property id unique identifier of the UI component
-     * @property actionUrl optional URL to be opened when the UI component is clicked
-     */
-    data class Click(val id: String, val actionUrl: String?) : UIAction("click")
-}
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
+
+data class InboxContainerUIState(
+    override val aepUIList: List<AepUI<*, *>> = emptyList()
+) : AepContainerUIState(aepUIList)

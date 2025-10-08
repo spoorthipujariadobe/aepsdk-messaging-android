@@ -11,14 +11,17 @@
 
 package com.adobe.marketing.mobile.aepcomposeui
 
+import androidx.compose.runtime.mutableStateOf
+import com.adobe.marketing.mobile.aepcomposeui.state.InboxContainerUIState
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxContainerUITemplate
+
 /**
- * Represents an action that can be performed on a UI component.
+ * Implementation of the [AepContainerUI] interface used in rendering a UI for an [InboxContainerUITemplate].
+ *
+ * @param template The template associated with the inbox container UI.
+ * @param state The current state of the inbox container UI.
  */
-sealed class UIAction(val interaction: String) {
-    /**
-     * Represents a click action that can be performed on a UI component
-     * @property id unique identifier of the UI component
-     * @property actionUrl optional URL to be opened when the UI component is clicked
-     */
-    data class Click(val id: String, val actionUrl: String?) : UIAction("click")
-}
+class InboxContainerUI(
+    private val template: InboxContainerUITemplate,
+    state: InboxContainerUIState
+) : BaseContainerUI<InboxContainerUITemplate, InboxContainerUIState> (template, state)

@@ -298,6 +298,9 @@ class EdgePersonalizationResponseHandler {
                                 "Unable to run completion logic for a personalization request event"
                                         + " - error occurred: %s",
                                 adobeError.getErrorName());
+                        if (handler != null) {
+                            handler.handle.call(false);
+                        }
                     }
 
                     // the callback is called by Edge extension when a request's stream has been
@@ -521,6 +524,7 @@ class EdgePersonalizationResponseHandler {
         for (final Map.Entry<Surface, List<Proposition>> propositionEntry :
                 requestedPropositions.entrySet()) {
             for (final Proposition proposition : propositionEntry.getValue()) {
+                InternalMessagingUtils.updateReadStatus(proposition, parent.getApi());
                 convertedPropositions.add(proposition.toEventData());
             }
         }

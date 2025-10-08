@@ -13,11 +13,16 @@ package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+
+import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventHistoryRequest;
+import com.adobe.marketing.mobile.EventHistoryResult;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.services.DataStoring;
 import com.adobe.marketing.mobile.services.DeviceInforming;
@@ -32,6 +37,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -693,6 +701,44 @@ class InternalMessagingUtils {
         }
         updatedMap.put(surface, existingList);
         return updatedMap;
+    }
+
+    static void updateReadStatus(final Proposition proposition, final ExtensionApi extensionApi) {
+        if (proposition == null || proposition.getItems().isEmpty()) {
+            return;
+        }
+        String activityId = proposition.getActivityId();
+        if (StringUtils.isNullOrEmpty(activityId)) {
+            return;
+        }
+        final boolean[] isRead = {false};
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventMask.Mask.EVENT_TYPE, MessagingEdgeEventType.INTERACT.getPropositionEventType());
+        eventData.put(MessagingConstants.EventMask.Mask.ACTIVITY_ID, activityId);
+        EventHistoryRequest[] eventHistoryRequest = {new EventHistoryRequest(eventData, 0, 0)};
+        try {
+            CountDownLatch latch = new CountDownLatch(1);
+            extensionApi.getHistoricalEvents(eventHistoryRequest, false, new AdobeCallbackWithError<EventHistoryResult[]>() {
+                @Override
+                public void fail(AdobeError error) {
+                    latch.countDown();
+                }
+
+                @Override
+                public void call(EventHistoryResult[] value) {
+                    if (value != null) {
+                        if (value.length > 0 && value[0] != null) {
+                            isRead[0] = value[0].count > 0;
+                        }
+                    }
+                    latch.countDown();
+                }
+            });
+            latch.await(500, TimeUnit.MILLISECONDS);
+            proposition.getItems().get(0).getItemData().put("read", isRead[0]);
+        } catch (InterruptedException e) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "updateReadStatus - failed to get historical events for proposition %s: %s", activityId, e.getLocalizedMessage());
+        }
     }
 
     @VisibleForTesting

@@ -44,13 +44,13 @@ import com.adobe.marketing.mobile.messaging.ContentCardImageManager
  */
 @Composable
 internal fun AepAsyncImage(
-    image: AepImage?,
+    image: AepImage,
     imageStyle: AepImageStyle = AepImageStyle(),
     onSuccess: (Bitmap) -> Unit = {},
     onError: (Throwable) -> Unit = {}
 ) {
-    val imageUrl = if (isSystemInDarkTheme() && image?.darkUrl != null)
-        image.darkUrl else image?.url
+    val imageUrl = if (isSystemInDarkTheme() && image.darkUrl != null)
+        image.darkUrl else image.url
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 

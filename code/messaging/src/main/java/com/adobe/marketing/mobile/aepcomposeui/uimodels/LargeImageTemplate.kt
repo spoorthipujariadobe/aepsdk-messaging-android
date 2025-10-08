@@ -29,7 +29,8 @@ data class LargeImageTemplate(
     val image: AepImage? = null,
     val actionUrl: String? = null,
     val buttons: List<AepButton>? = null,
-    val dismissBtn: AepIcon? = null
+    val dismissBtn: AepIcon? = null,
+    val isRead: Boolean = false
 ) : AepUITemplate {
 
     /**

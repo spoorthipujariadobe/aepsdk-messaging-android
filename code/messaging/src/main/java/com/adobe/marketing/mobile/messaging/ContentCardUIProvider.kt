@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.messaging
 
+import com.adobe.marketing.mobile.AdobeCallback
 import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
@@ -18,12 +19,20 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
+import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.SELF_TAG
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.buildTemplate
+import com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG
 import com.adobe.marketing.mobile.services.Log
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.suspendCancellableCoroutine
+import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * ContentCardUiProvider is responsible for fetching and managing the content for a given surface.
@@ -36,7 +45,8 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
         private const val SELF_TAG: String = "ContentCardUIProvider"
     }
 
-    private val _contentFlow = MutableStateFlow<Result<List<AepUITemplate>>>(Result.success(emptyList()))
+    private val _contentFlow =
+        MutableStateFlow<Result<List<AepUITemplate>>>(Result.success(emptyList()))
     private val contentFlow: StateFlow<Result<List<AepUITemplate>>> = _contentFlow
 
     private val aepUiFlow = _contentFlow.map { result ->
@@ -166,5 +176,80 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                 }
             }
         )
+    }
+
+    override suspend fun getContentCardFlow(): Flow<List<AepUI<*, *>>> = flow {
+        val isPropositionsUpdated = updatePropositionsForSurface()
+        if (isPropositionsUpdated) {
+            processPropositions(getPropositionsForSurface()).collect { uiList ->
+                emit(uiList)
+            }
+        } else {
+            emit(emptyList())
+        }
+    }
+
+    // Convert Messaging.updatePropositionsForSurface to a suspend function
+    suspend fun updatePropositionsForSurface(): Boolean =
+        suspendCancellableCoroutine { continuation ->
+            val callback: AdobeCallback<Boolean?>? = AdobeCallback { value ->
+                when {
+                    value == null -> continuation.resumeWithException(
+                        Exception("updatePropositionsForSurface returned null")
+                    )
+
+                    continuation.isActive -> continuation.resume(value)
+                }
+            }
+
+            Messaging.updatePropositionsForSurfaces(listOf(surface), callback)
+            continuation.invokeOnCancellation {
+                Log.debug(LOG_TAG, SELF_TAG, "updatePropositionsForSurface connection cancelled")
+            }
+        }
+
+    suspend fun getPropositionsForSurface(): Map<Surface, List<Proposition>> =
+        suspendCancellableCoroutine { continuation ->
+            val callback = object : AdobeCallbackWithError<Map<Surface, List<Proposition>>> {
+                override fun call(resultMap: Map<Surface, List<Proposition>>?) {
+                    if (resultMap != null) {
+                        continuation.resume(resultMap)
+                    } else {
+                        continuation.resumeWithException(
+                            Exception("getPropositionsForSurface returned null")
+                        )
+                    }
+                }
+
+                override fun fail(error: AdobeError?) {
+                    continuation.resumeWithException(
+                        Exception("Failed to retrieve propositions: ${error?.errorName}")
+                    )
+                }
+            }
+
+            Messaging.getPropositionsForSurfaces(listOf(surface), callback)
+            continuation.invokeOnCancellation {
+                Log.debug(LOG_TAG, SELF_TAG, "getPropositionsForSurface connection cancelled")
+            }
+        }
+
+    private fun processPropositions(propositions: Map<Surface, List<Proposition>>?): Flow<List<AepUI<*, *>>> = flow {
+        if(propositions.isNullOrEmpty()) {
+            throw IOException("Propositions map is null or empty")
+        }
+        val templateModelList = propositions[surface]?.mapNotNull { proposition ->
+            try {
+                buildTemplate(proposition)
+            } catch (e: IllegalArgumentException) {
+                Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to build template: proposition ID : ${proposition.uniqueId} ${e.message}"
+                )
+                null
+            }
+        } ?: throw IOException("Propositions map is null or empty")
+        emit(templateModelList.mapNotNull { item -> UIUtils.getAepUI(item) } )
     }
 }

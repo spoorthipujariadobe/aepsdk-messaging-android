@@ -48,13 +48,19 @@ internal object UIUtils {
     fun getAepUI(uiTemplate: AepUITemplate): AepUI<*, *>? {
         return when (uiTemplate) {
             is SmallImageTemplate -> {
-                SmallImageUI(uiTemplate, SmallImageCardUIState())
+                SmallImageUI(uiTemplate, SmallImageCardUIState(
+                    read = uiTemplate.isRead
+                ))
             }
             is LargeImageTemplate -> {
-                LargeImageUI(uiTemplate, LargeImageCardUIState())
+                LargeImageUI(uiTemplate, LargeImageCardUIState(
+                    read = uiTemplate.isRead
+                ))
             }
             is ImageOnlyTemplate -> {
-                ImageOnlyUI(uiTemplate, ImageOnlyCardUIState())
+                ImageOnlyUI(uiTemplate, ImageOnlyCardUIState(
+                    read = uiTemplate.isRead
+                ))
             }
             else -> {
                 Log.error(
